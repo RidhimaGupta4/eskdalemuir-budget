@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="636.48pt" height="315.085875pt" viewBox="0 0 636.48 315.085875" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-11-04T23:22:56.178716</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M -0 315.085875 
+L 636.48 315.085875 
+L 636.48 0 
+L -0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 46.08 259.524 
+L 629.28 259.524 
+L 629.28 64.476 
+L 46.08 64.476 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 72.589091 259.524 
+L 136.677003 259.524 
+L 136.677003 184.41628 
+L 72.589091 184.41628 
+z
+" clip-path="url(#p7c12a42510)" style="fill: #b9b9af"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 189.112567 184.41628 
+L 253.20048 184.41628 
+L 253.20048 175.544614 
+L 189.112567 175.544614 
+z
+" clip-path="url(#p7c12a42510)" style="fill: #2f6db5"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 305.636044 175.544614 
+L 369.723956 175.544614 
+L 369.723956 160.342319 
+L 305.636044 160.342319 
+z
+" clip-path="url(#p7c12a42510)" style="fill: #2f6db5"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 422.15952 160.342319 
+L 486.247433 160.342319 
+L 486.247433 130.930122 
+L 422.15952 130.930122 
+z
+" clip-path="url(#p7c12a42510)" style="fill: #2f6db5"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 538.682997 259.524 
+L 602.770909 259.524 
+L 602.770909 130.930122 
+L 538.682997 130.930122 
+z
+" clip-path="url(#p7c12a42510)" style="fill: #b9b9af"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1"/>
+     <g id="text_1">
+      <text style="font-size: 9.5px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #666666" x="104.633047" y="270.242516" transform="rotate(-0 104.633047 270.242516)">As published</text>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_2"/>
+     <g id="text_2">
+      <text style="font-size: 9.5px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #666666" x="221.156523" y="270.242516" transform="rotate(-0 221.156523 270.242516)">Known makers</text>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_3"/>
+     <g id="text_3">
+      <text style="font-size: 9.5px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #666666" x="337.68" y="270.242516" transform="rotate(-0 337.68 270.242516)">Utilisation</text>
+     </g>
+    </g>
+    <g id="xtick_4">
+     <g id="line2d_4"/>
+     <g id="text_4">
+      <text style="font-size: 9.5px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #666666" x="454.203477" y="270.242516" transform="rotate(-0 454.203477 270.242516)">Legacy farms</text>
+     </g>
+    </g>
+    <g id="xtick_5">
+     <g id="line2d_5"/>
+     <g id="text_5">
+      <text style="font-size: 9.5px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #666666" x="570.726953" y="270.242516" transform="rotate(-0 570.726953 270.242516)">All three removed</text>
+     </g>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2"/>
+   <g id="line2d_6">
+    <path d="M 136.677003 184.41628 
+L 189.112567 184.41628 
+" clip-path="url(#p7c12a42510)" style="fill: none; stroke-dasharray: 0.8,1.32; stroke-dashoffset: 0; stroke: #666666; stroke-width: 0.8"/>
+   </g>
+   <g id="line2d_7">
+    <path d="M 253.20048 175.544614 
+L 305.636044 175.544614 
+" clip-path="url(#p7c12a42510)" style="fill: none; stroke-dasharray: 0.8,1.32; stroke-dashoffset: 0; stroke: #666666; stroke-width: 0.8"/>
+   </g>
+   <g id="line2d_8">
+    <path d="M 369.723956 160.342319 
+L 422.15952 160.342319 
+" clip-path="url(#p7c12a42510)" style="fill: none; stroke-dasharray: 0.8,1.32; stroke-dashoffset: 0; stroke: #666666; stroke-width: 0.8"/>
+   </g>
+   <g id="line2d_9">
+    <path d="M 486.247433 130.930122 
+L 538.682997 130.930122 
+" clip-path="url(#p7c12a42510)" style="fill: none; stroke-dasharray: 0.8,1.32; stroke-dashoffset: 0; stroke: #666666; stroke-width: 0.8"/>
+   </g>
+   <g id="LineCollection_1">
+    <path d="M 570.726953 135.17192 
+L 570.726953 128.135613 
+" clip-path="url(#p7c12a42510)" style="fill: none; stroke: #1a1a1a; stroke-width: 1.2"/>
+   </g>
+   <g id="line2d_10">
+    <defs>
+     <path id="m68e525b989" d="M 5 0 
+L -5 -0 
+" style="stroke: #1a1a1a"/>
+    </defs>
+    <g clip-path="url(#p7c12a42510)">
+     <use xlink:href="#m68e525b989" x="570.726953" y="135.17192" style="fill: #1a1a1a; stroke: #1a1a1a"/>
+    </g>
+   </g>
+   <g id="line2d_11">
+    <g clip-path="url(#p7c12a42510)">
+     <use xlink:href="#m68e525b989" x="570.726953" y="128.135613" style="fill: #1a1a1a; stroke: #1a1a1a"/>
+    </g>
+   </g>
+   <g id="line2d_12">
+    <path d="M 46.08 78.924 
+L 629.28 78.924 
+" clip-path="url(#p7c12a42510)" style="fill: none; stroke-dasharray: 3.7,1.6; stroke-dashoffset: 0; stroke: #8c8c8c"/>
+   </g>
+   <g id="line2d_13">
+    <path d="M 570.726953 130.930122 
+" clip-path="url(#p7c12a42510)" style="fill: none; stroke: #1a1a1a; stroke-width: 1.2; stroke-linecap: square"/>
+   </g>
+   <g id="patch_8">
+    <path d="M 46.08 259.524 
+L 629.28 259.524 
+" style="fill: none; stroke: #666666; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="text_6">
+    <text style="font-weight: 700; font-size: 9.5px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #1a1a1a" x="104.633047" y="181.70728" transform="rotate(-0 104.633047 181.70728)">41.6%</text>
+   </g>
+   <g id="text_7">
+    <text style="font-weight: 700; font-size: 9.5px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #1a1a1a" x="221.156523" y="172.835614" transform="rotate(-0 221.156523 172.835614)">+4.9</text>
+   </g>
+   <g id="text_8">
+    <text style="font-weight: 700; font-size: 9.5px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #1a1a1a" x="337.68" y="157.633319" transform="rotate(-0 337.68 157.633319)">+8.4</text>
+   </g>
+   <g id="text_9">
+    <text style="font-weight: 700; font-size: 9.5px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #1a1a1a" x="454.203477" y="128.221122" transform="rotate(-0 454.203477 128.221122)">+16.3</text>
+   </g>
+   <g id="text_10">
+    <text style="font-weight: 700; font-size: 9.5px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #1a1a1a" x="570.726953" y="114.590613" transform="rotate(-0 570.726953 114.590613)">71.2%</text>
+   </g>
+   <g id="text_11">
+    <text style="font-size: 8.5px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #666666" x="570.726953" y="123.620613" transform="rotate(-0 570.726953 123.620613)">range 68.9–72.8</text>
+   </g>
+   <g id="text_12">
+    <text style="font-size: 8.5px; font-family: 'DejaVu Sans'; text-anchor: end; fill: #666666" x="605.683996" y="76.215" transform="rotate(-0 605.683996 76.215)">Whole budget</text>
+   </g>
+  </g>
+  <g id="text_13">
+   <text style="font-weight: 700; font-size: 12.5px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #1a1a1a" x="7.2" y="16.698047" transform="rotate(-0 7.2 16.698047)">Three caution layers hold 30 points of budget; over half is legacy allocations</text>
+  </g>
+  <g id="text_14">
+   <text style="font-size: 9.5px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #666666" x="7.2" y="32.994516" transform="rotate(-0 7.2 32.994516)">Share of the 0.336 nm budget still free (squared-amplitude terms); each step averaged over all removal orders (Shapley)</text>
+  </g>
+  <g id="text_15">
+   <text style="font-size: 8px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #666666" x="7.2" y="305.964" transform="rotate(-0 7.2 305.964)">Steps size each layer; none is a recommendation to remove it. Range: legacy-layer reproduction error (−8% to +7%).</text>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p7c12a42510">
+   <rect x="46.08" y="64.476" width="583.2" height="195.048"/>
+  </clipPath>
+ </defs>
+</svg>
