@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eskdalemuir Budget Explorer</title>
+<meta name="description" content="Interactive explorer for the Eskdalemuir seismic array's 0.336 nm wind-turbine vibration budget: where it goes, what each layer of caution costs, and a live implementation of the published 2026 algorithm.">
+<style>
+:root {
+  color-scheme: light;
+  --page: #f4f3ef; --surface: #fcfcfb; --surface-2: #f0efec; --border: #e2e0da;
+  --ink: #0b0b0b; --ink-2: #52514e; --ink-3: #75736d;
+  --accent: #2a78d6; --accent-soft: rgba(42,120,214,.12); --grey: #b3b1a8; --grid: #e7e5df; --ref: #8c8a83;
+  --good: #0ca30c; --critical: #d03b3b; --warn-bg: #fff6e0; --warn-ink: #6b4b00;
+  --radius: 14px; --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page: #121211; --surface: #1a1a19; --surface-2: #232321; --border: #2f2f2c;
+    --ink: #f0efec; --ink-2: #c3c2b7; --ink-3: #9d9b92;
+    --accent: #3987e5; --accent-soft: rgba(57,135,229,.18); --grey: #6c6a64; --grid: #2c2c29; --ref: #8f8d86;
+    --warn-bg: #2d2614; --warn-ink: #f1d48a;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #121211; --surface: #1a1a19; --surface-2: #232321; --border: #2f2f2c;
+  --ink: #f0efec; --ink-2: #c3c2b7; --ink-3: #9d9b92;
+  --accent: #3987e5; --accent-soft: rgba(57,135,229,.18); --grey: #6c6a64; --grid: #2c2c29; --ref: #8f8d86;
+  --warn-bg: #2d2614; --warn-ink: #f1d48a;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+a { color: var(--accent); }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px 64px; }
+header.top { padding: 40px 0 8px; }
+.eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
+h1 { font-size: clamp(26px, 4vw, 38px); line-height: 1.15; margin: 8px 0 12px; letter-spacing: -.01em; }
+.lede { max-width: 760px; color: var(--ink-2); font-size: 16.5px; margin: 0 0 16px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 8px 0 24px; font-size: 13px; color: var(--ink-2); }
+.badge { display: inline-flex; align-items: center; gap: 8px; padding: 5px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); font-size: 12.5px; }
+.badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--grey); }
+.badge.ok .dot { background: var(--good); } .badge.bad .dot { background: var(--critical); }
+button.theme { margin-left: auto; font: inherit; font-size: 12.5px; color: var(--ink-2); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px; cursor: pointer; }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
+.kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
+.kpi .v { font-size: 30px; font-weight: 650; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.kpi .v small { font-size: 15px; font-weight: 600; color: var(--ink-2); }
+.kpi .l { color: var(--ink-2); font-size: 13px; margin-top: 6px; }
+section.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px 22px 18px; margin-bottom: 20px; }
+.card h2 { font-size: 20px; margin: 0 0 4px; letter-spacing: -.01em; }
+.card .sub { color: var(--ink-2); margin: 0 0 16px; font-size: 14px; max-width: 820px; }
+.grid2 { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.controls { display: grid; gap: 14px; }
+.ctl label { display: flex; justify-content: space-between; gap: 8px; font-size: 13.5px; font-weight: 600; }
+.ctl label span.val { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--accent); }
+.ctl .hint { font-size: 12.5px; color: var(--ink-3); margin-top: 2px; }
+input[type=range] { width: 100%; accent-color: var(--accent); margin: 6px 0 0; }
+input[type=number], select { width: 100%; font: inherit; font-size: 14px; color: var(--ink); background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; margin-top: 4px; }
+.switch { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; cursor: pointer; }
+.switch input { margin-top: 3px; accent-color: var(--accent); width: 16px; height: 16px; }
+.switch b { display: block; font-weight: 600; } .switch span { color: var(--ink-3); font-size: 12.5px; }
+.readout { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.readout div { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; }
+.readout .n { font-size: 22px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.readout .t { font-size: 12px; color: var(--ink-2); }
+.verdict { margin-top: 10px; padding: 10px 12px; border-radius: 10px; font-size: 13.5px; background: var(--surface-2); }
+.verdict b { font-weight: 650; }
+.note { font-size: 12.5px; color: var(--ink-3); margin-top: 10px; }
+.callout { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 10px 12px; font-size: 13px; margin-top: 12px; }
+svg { display: block; max-width: 100%; overflow: visible; }
+#conc-chart, #calc-chart, #val-chart, #ledger-bar { width: 100%; }
+.shap { display: grid; grid-template-columns: minmax(120px, 190px) 1fr 54px; gap: 10px; align-items: center; font-size: 13px; margin: 6px 0; }
+.shap .track { background: var(--surface-2); border-radius: 4px; height: 14px; } .shap .track span { display: block; height: 14px; border-radius: 4px; background: var(--accent); }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.presets button { font: inherit; font-size: 12px; color: var(--ink-2); background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+.presets button:hover { border-color: var(--accent); color: var(--ink); }
+.shap b { text-align: right; font-variant-numeric: tabular-nums; }
+svg text { font-family: inherit; }
+.axis text { fill: var(--ink-3); font-size: 11.5px; } .axis line, .axis path { stroke: var(--grid); }
+.tip { position: fixed; pointer-events: none; z-index: 10; background: var(--ink); color: var(--surface); font-size: 12.5px; line-height: 1.4; padding: 7px 10px; border-radius: 8px; max-width: 280px; opacity: 0; transition: opacity .08s; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--ink-2); margin: 0 0 6px; }
+.legend i { display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+.legend i.dot { width: 10px; height: 10px; border-radius: 50%; }
+.legend i.ring { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--grey); background: transparent; }
+.timeline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.era { border: 1px solid var(--border); border-radius: 12px; padding: 14px; background: var(--surface); }
+.era.on { border: 2px solid var(--accent); background: var(--accent-soft); }
+.era .y { font-size: 20px; font-weight: 700; } .era .d { font-size: 12.5px; color: var(--ink-3); margin-bottom: 8px; }
+.era p { margin: 0; font-size: 13.5px; }
+.era q { color: var(--ink-2); }
+table.data { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+table.data th, table.data td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+table.data th { color: var(--ink-2); font-weight: 600; }
+table.data td.r, table.data th.r { text-align: right; }
+details { margin-top: 10px; } summary { cursor: pointer; font-size: 13px; color: var(--ink-2); }
+footer { color: var(--ink-2); font-size: 13px; margin-top: 28px; }
+footer h3 { font-size: 15px; color: var(--ink); margin: 18px 0 6px; }
+footer ul { padding-left: 18px; margin: 6px 0; }
+@media (max-width: 860px) {
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .grid2 { grid-template-columns: 1fr; }
+  .timeline { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .kpi .v { font-size: 24px; } .readout .n { font-size: 18px; } section.card { padding: 16px 14px 14px; }
+  .timeline { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">Open reproduction · public documents only</div>
+    <h1>Eskdalemuir budget explorer</h1>
+    <p class="lede">Wind turbines within 50 km of the Eskdalemuir seismic array share a vibration budget of 0.336 nanometres.
+      This page runs the UK government's published 2026 calculation in your browser, shows where the budget goes,
+      and lets you test what each layer of caution costs.</p>
+    <div class="toolbar">
+      <span class="badge" id="engine"><span class="dot"></span><span id="engine-text">Checking the engine…</span></span>
+      <span id="asof"></span>
+      <button class="theme" id="theme" type="button" aria-label="Switch colour theme">Theme: auto</button>
+    </div>
+  </header>
+
+  <div class="kpis" id="kpis"></div>
+
+  <section class="card" id="where">
+    <h2>Where the budget goes</h2>
+    <p class="sub">Vibrations add in quadrature, so a farm's share of the budget is its squared amplitude. Drag the slider
+      to set a distance from the array and compare the budget used by farms closer than that with their share of capacity.</p>
+    <div class="grid2">
+      <div>
+        <div class="legend"><span><i style="background:var(--accent)"></i>Share of budget used</span><span><i style="background:var(--grey)"></i>Share of capacity</span></div>
+        <div id="conc-chart"></div>
+      </div>
+      <div class="controls">
+        <div class="ctl"><label for="cut">Distance from the array <span class="val" id="cut-val"></span></label>
+          <input type="range" id="cut" min="15" max="50" step="0.5" value="17"></div>
+        <div class="readout">
+          <div><div class="n" id="cut-b"></div><div class="t">of the budget used</div></div>
+          <div><div class="n" id="cut-c"></div><div class="t">of the capacity</div></div>
+          <div><div class="n" id="cut-n"></div><div class="t">farms closer</div></div>
+          <div><div class="n" id="cut-mw"></div><div class="t">MW closer</div></div>
+        </div>
+        <p class="note">Built and consented farms in the 2026 consultation (Annex 14, Table 5, worst-case scenario), using each farm's
+          published average distance. Hover the blue line to see individual farms.</p>
+      </div>
+    </div>
+    <details><summary>Show the ten largest users of the budget</summary><div id="top-table"></div></details>
+  </section>
+
+  <section class="card" id="ledger">
+    <h2>The caution ledger: test the assumptions</h2>
+    <p class="sub">The published budget stacks several cautious choices. Switch each one off, or adjust it, to see how much of
+      the 0.336 nm budget it holds. This sizes the caution; it is not a recommendation to remove any of it.</p>
+    <div class="grid2">
+      <div>
+        <div id="ledger-bar"></div>
+        <div class="readout" style="margin-top:14px">
+          <div><div class="n" id="l-free"></div><div class="t">of the budget free (squared-amplitude terms)</div></div>
+          <div><div class="n" id="l-head"></div><div class="t">headroom, as Annex 15 defines it</div></div>
+          <div><div class="n" id="l-c"></div><div class="t">cumulative amplitude of existing farms</div></div>
+          <div><div class="n" id="l-sil"></div><div class="t">implied SIL for 2 GW (headroom ÷ √2000)</div></div>
+        </div>
+        <h3 style="font-size:15px;margin:20px 0 4px">Order-independent shares (Shapley values)</h3>
+        <p class="note" style="margin-top:0">Each layer's share averaged over every order in which the three could be removed, at the documented settings.</p>
+        <div id="shapley"></div>
+      </div>
+      <div class="controls">
+        <label class="switch"><input type="checkbox" id="sw-k"><div><b>Use known turbine makers</b><span>The government's own second scenario (Annex 14, Table 6) instead of the worst of six models for built farms.</span></div></label>
+        <div class="ctl"><label for="util">Utilisation, as an amplitude factor <span class="val" id="util-val"></span></label>
+          <input type="range" id="util" min="0.6" max="1" step="any" value="1">
+          <div class="presets"><button type="button" data-u="1">1.00 · current</button><button type="button" data-u="0.9055385138137417">√0.82 ≈ 0.906 · 2014 estimate</button><button type="button" data-u="0.6">0.60 · 2005 rule</button></div>
+          <div class="hint">1.00 assumes every turbine is at the reference condition at once.</div></div>
+        <label class="switch"><input type="checkbox" id="sw-l"><div><b>Legacy farms on the 2026 model</b><span>Six farms still assessed on the 2014 algorithm under earlier arrangements, recalculated with the 2026 worst-case model (author's calculation).</span></div></label>
+        <div class="ctl" id="err-ctl"><label for="err">Reproduction error on legacy farms <span class="val" id="err-val"></span></label>
+          <input type="range" id="err" min="-8" max="7" step="0.01" value="0">
+          <div class="hint" id="err-hint"></div></div>
+        <div class="callout">The legacy allocations rest on legal agreements or Ministry of Defence rules, and a utilisation of 1 may be
+          right if the farms that dominate the budget peak together. Background noise counted as turbine noise is a further layer that
+          public documents do not let us size.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="calc">
+    <h2>Single-turbine calculator</h2>
+    <p class="sub">The 2026 algorithm (Annex 14, Section 3) running live. Pick an approved manufacturer model and a turbine, and
+      see its predicted vibration at the array and its value against the proposed Seismic Impact Limit (SIL).</p>
+    <div class="grid2">
+      <div>
+        <div class="legend"><span><i style="background:var(--accent)"></i>Predicted amplitude at the array</span><span><i style="background:var(--ref)"></i>SIL × √(rated power), consultation range</span></div>
+        <div id="calc-chart"></div>
+      </div>
+      <div class="controls">
+        <div class="ctl"><label for="c-model">Approved model (LATT)</label><select id="c-model"></select></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="ctl"><label for="c-d">Rotor diameter (m)</label><input type="number" id="c-d" min="10" max="250" step="1" value="133"></div>
+          <div class="ctl"><label for="c-h">Hub height (m)</label><input type="number" id="c-h" min="20" max="200" step="1" value="110"></div>
+          <div class="ctl"><label for="c-p">Rated power (MW)</label><input type="number" id="c-p" min="0.5" max="10" step="0.1" value="4.8"></div>
+          <div class="ctl"><label for="c-r">Distance (km)</label><input type="number" id="c-r" min="15" max="50" step="0.5" value="25"></div>
+        </div>
+        <div class="readout">
+          <div><div class="n" id="c-amp"></div><div class="t">amplitude at the array</div></div>
+          <div><div class="n" id="c-silv"></div><div class="t">amplitude ÷ √(rated power)</div></div>
+          <div><div class="n" id="c-share"></div><div class="t">of worst-case headroom (squared terms)</div></div>
+          <div><div class="n" id="c-mind"></div><div class="t">nearest distance within the SIL (upper / lower end of range)</div></div>
+        </div>
+        <div class="verdict" id="c-verdict"></div>
+        <p class="note">Independent reproduction for understanding the method, not the official Industry Tool. On 12 farms it
+          matches published figures with a median error of 3.4%. Proposed SIL range: 0.004614 to 0.005479 nm/√MW.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="valid">
+    <h2>How well is the new model checked?</h2>
+    <p class="sub">Predicted ÷ measured impact at the array for the Phase 4 farms (Annex 13, Table 3). Five of the six
+      comparisons use the same measurement campaigns the 2026 models were fitted to (Annex 5, Table 1).</p>
+    <div class="legend"><span><i class="ring"></i>2014 model</span><span><i class="dot" style="background:var(--accent)"></i>2026 published figure</span><span><i style="background:var(--accent-soft);height:8px"></i>Ewe Hill range</span></div>
+    <div id="val-chart"></div>
+    <p class="note">Measured values include background noise, so the true turbine-only signal is at or below each measurement.
+      Harestanes, flagged unreliable in Annex 13, is excluded. Ewe Hill range: the published Siemens coefficients applied per turbine
+      (author's calculation) to the published figure.</p>
+  </section>
+
+  <section class="card" id="history">
+    <h2>What the budget meant, 2005 to 2026</h2>
+    <p class="sub">The limit has stayed at 0.336 nm. Only the 2005 version stated how often it could be exceeded.</p>
+    <div class="timeline">
+      <div class="era on"><div class="y">2005</div><div class="d">Keele report (Styles et al.)</div>
+        <p>The limit is the median of 330 noisy-day recordings. Wind farms may add as much noise as the array already hears.
+          <q>We accept that for 20 % of the time averaged over a year, seismic amplitude levels may exceed the permitted threshold.</q></p></div>
+      <div class="era"><div class="y">2014</div><div class="d">New algorithm (Xi Engineering)</div>
+        <p>Utilisation re-estimated at about 0.9 of amplitude, then set to 1 <q>until, and if, further work is conducted in this area.</q></p></div>
+      <div class="era"><div class="y">2020</div><div class="d">Working Group report (SGV-202)</div>
+        <p>Described as <q>a now defunct utilisation factor</q>, set to one <q>for simplicity</q>.</p></div>
+      <div class="era"><div class="y">2026</div><div class="d">DESNZ consultation</div>
+        <p>Six fitted manufacturer models, every turbine at the 12 m/s reference at once. No exceedance probability stated.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <h3>About this page</h3>
+    <p>Built from the repository's computed outputs by <code>scripts/07_build_dashboard.py</code>. No parameter is fitted or
+      adjusted to match a published figure; published values are comparison targets only. The engine badge at the top compares
+      this page's calculation with the Python reference on every load.</p>
+    <h3>Sources</h3>
+    <ul>
+      <li>DESNZ (2026), consultation on managing onshore wind interference with the Eskdalemuir Seismic Array, and Annexes 5, 13, 14 and 15.</li>
+      <li>Styles, P. et al. (2005), Keele University report for the MOD, DTI and BWEA.</li>
+      <li>Xi Engineering (2014), FMB 203 (Annex 12); Xi Engineering (2020), SGV-202.</li>
+      <li>Turbine positions © OpenStreetMap contributors, ODbL.</li>
+    </ul>
+    <p id="foot-repo"></p>
+  </footer>
+</div>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+const DATA = {"budget_nm":0.336,"as_of":"4 November 2026","repo_url":"https://github.com/RidhimaGupta4/eskdalemuir-budget","constants":{"a0":0.8678,"a1":-8.382,"a2":3.625,"fc":8.0,"fcmax":6.5,"fmin":0.5,"fmax":8.0,"fnorm":3.28,"nch":20,"qc":100.0,"rref":1.0,"snrmax":4.0,"tstar":0.15,"vref":12.0,"zl":0.05,"zref":80.0,"df":0.001},"latt":{"A_Senvion":{"label":"A \u00b7 Senvion (fitted at Middlemuir)","CBP":1.105e-25,"p":3.85,"sBP":0.01,"CBM":[6.7131e-27,3.8652e-27,3.3151e-27,8.5382e-27],"fj":[2.39,3.99,4.8,5.8],"sj":[0.082,0.041,0.093,0.057],"COBN":1.9082e-26,"v_tip":71.7712},"B_Vestas":{"label":"B \u00b7 Vestas (fitted at Glenkerie)","CBP":9.3387e-25,"p":4.05,"sBP":0.022,"CBM":[1.1096e-26,4.6531e-27,3.9372e-27,1.0717e-29],"fj":[2.24,4.2,5.9,7.1],"sj":[0.066,0.185,0.216,0.5],"COBN":3.8887e-26,"v_tip":69.8},"C_Enercon":{"label":"C \u00b7 Enercon (fitted at Craig Hill)","CBP":2.4501e-26,"p":1.35,"sBP":0.044,"CBM":[7.5096e-28,7.6566e-27,1.4831e-27,2.2772e-27],"fj":[2.96,4.6,5.66,6.89],"sj":[0.009,0.069,0.12,0.051],"COBN":3.4007e-26,"v_tip":60.5},"D_Nordex":{"label":"D \u00b7 Nordex (fitted at Craig Hill)","CBP":2.6244e-25,"p":3.2175,"sBP":0.0319,"CBM":[1.2514e-26,5.3901e-27,3.5265e-27,1.046e-27],"fj":[2.14,4.2,6.3,8.0],"sj":[0.021,0.07,0.1045,0.338],"COBN":3.4007e-26,"v_tip":69.9},"E_GE":{"label":"E \u00b7 GE (fitted at Langhope Rig)","CBP":9.892e-25,"p":3.036,"sBP":0.01,"CBM":[4.2373e-25,9.8687e-28,1.6727e-27,7.8948e-27],"fj":[2.68,4.11,5.4,6.7],"sj":[0.01,0.032,0.136,0.112],"COBN":1.9692e-26,"v_tip":77.49},"F_Siemens":{"label":"F \u00b7 Siemens (fitted at Clyde)","CBP":4.1651e-25,"p":3.6,"sBP":0.04,"CBM":[2.18e-26,1.0655e-26,7.2038e-29,7.5013e-28],"fj":[2.81,3.25,5.3,6.2],"sj":[0.05,0.04,0.064,0.098],"COBN":2.0866e-26,"v_tip":77.49}},"farms":[{"name":"Bowbeat","n":24,"mw":31.2,"r":42.3,"H":45.0,"D":62.0,"a5":0.003781,"a6":0.003122,"legacy":false,"w26":null},{"name":"Minsca","n":17,"mw":42.5,"r":24.84,"H":80.0,"D":82.3,"a5":0.027591,"a6":0.022668,"legacy":false,"w26":null},{"name":"Dalswinton","n":15,"mw":30.0,"r":35.87,"H":80.0,"D":82.0,"a5":0.008415,"a6":0.005049,"legacy":false,"w26":null},{"name":"Craig (Carlesghill)","n":5,"mw":13.2,"r":19.66,"H":59.8,"D":80.4,"a5":0.0247,"a6":0.021358,"legacy":false,"w26":null},{"name":"Halkburn OR Long Park WF","n":19,"mw":38.0,"r":42.84,"H":59.0,"D":82.0,"a5":0.004647,"a6":0.002825,"legacy":false,"w26":null},{"name":"Harestanes","n":71,"mw":213.0,"r":27.28,"H":77.5,"D":86.6,"a5":0.04604,"a6":0.04604,"legacy":false,"w26":null},{"name":"Clyde","n":152,"mw":456.0,"r":29.99,"H":78.3,"D":93.0,"a5":0.058002,"a6":0.047426,"legacy":false,"w26":null},{"name":"Ewe Hill","n":22,"mw":50.6,"r":19.02,"H":67.9,"D":93.0,"a5":0.067744,"a6":0.056921,"legacy":false,"w26":null},{"name":"Carcant","n":3,"mw":9.9,"r":49.19,"H":58.5,"D":82.4,"a5":0.001056,"a6":0.000881,"legacy":false,"w26":null},{"name":"Langhope Rig","n":10,"mw":15.0,"r":21.35,"H":80.0,"D":82.5,"a5":0.031343,"a6":0.031343,"legacy":false,"w26":null},{"name":"Andershaw A","n":11,"mw":36.3,"r":46.62,"H":81.5,"D":117.0,"a5":0.003984,"a6":0.003854,"legacy":false,"w26":null},{"name":"Middle Hill OR Glenkerie A","n":11,"mw":22.0,"r":29.24,"H":68.2,"D":80.0,"a5":0.013076,"a6":0.011923,"legacy":false,"w26":null},{"name":"Aikrigg Cottage","n":1,"mw":0.006,"r":49.63,"H":9.0,"D":5.5,"a5":2.2e-05,"a6":2.2e-05,"legacy":false,"w26":null},{"name":"Kingstown Industrial Estate","n":1,"mw":0.015,"r":47.43,"H":15.0,"D":5.6,"a5":3.1e-05,"a6":3.1e-05,"legacy":false,"w26":null},{"name":"Lammerlaw Farm","n":1,"mw":0.011,"r":44.27,"H":18.3,"D":13.0,"a5":0.000102,"a6":0.000102,"legacy":false,"w26":null},{"name":"Brunstock Close","n":1,"mw":0.006,"r":48.53,"H":15.2,"D":4.1,"a5":2.1e-05,"a6":2.1e-05,"legacy":false,"w26":null},{"name":"Minnygap","n":10,"mw":20.0,"r":25.27,"H":75.0,"D":99.8,"a5":0.024475,"a6":0.020216,"legacy":false,"w26":null},{"name":"Craig Ext (Carlesgill Ext)","n":1,"mw":3.2,"r":19.03,"H":59.0,"D":82.0,"a5":0.012114,"a6":0.010674,"legacy":false,"w26":null},{"name":"Langshaw Farm","n":1,"mw":0.05,"r":43.82,"H":30.0,"D":19.0,"a5":0.000176,"a6":0.000176,"legacy":false,"w26":null},{"name":"Land East of Braidwood","n":1,"mw":0.006,"r":34.54,"H":15.0,"D":5.6,"a5":0.000104,"a6":0.000104,"legacy":false,"w26":null},{"name":"Westmill Farm","n":1,"mw":0.011,"r":44.37,"H":18.3,"D":13.0,"a5":0.000101,"a6":0.000101,"legacy":false,"w26":null},{"name":"Rennieston Edge","n":1,"mw":0.06,"r":41.06,"H":10.3,"D":5.5,"a5":5e-05,"a6":5e-05,"legacy":false,"w26":null},{"name":"Scotston Bank Farm","n":3,"mw":0.045,"r":40.96,"H":15.0,"D":9.6,"a5":0.000168,"a6":0.000168,"legacy":false,"w26":null},{"name":"Windyknowe","n":1,"mw":0.006,"r":43.54,"H":15.0,"D":5.6,"a5":4.4e-05,"a6":4.4e-05,"legacy":false,"w26":null},{"name":"Land NW of Ferniehaugh Farm","n":2,"mw":0.06,"r":48.04,"H":15.0,"D":9.6,"a5":7.2e-05,"a6":7.2e-05,"legacy":false,"w26":null},{"name":"Land NW of Threepwood House","n":1,"mw":0.015,"r":45.25,"H":20.6,"D":12.8,"a5":9.5e-05,"a6":9.5e-05,"legacy":false,"w26":null},{"name":"Lauder B","n":2,"mw":0.12,"r":49.76,"H":30.0,"D":14.0,"a5":0.000107,"a6":0.000107,"legacy":false,"w26":null},{"name":"Meadowside Cottage","n":1,"mw":0.02,"r":44.2,"H":20.6,"D":12.8,"a5":0.000104,"a6":0.000104,"legacy":false,"w26":null},{"name":"Mosshouses Farm","n":1,"mw":0.015,"r":43.91,"H":15.1,"D":9.6,"a5":7.4e-05,"a6":7.4e-05,"legacy":false,"w26":null},{"name":"Land SW of Larkhill","n":1,"mw":0.015,"r":47.9,"H":20.6,"D":12.8,"a5":7.4e-05,"a6":7.4e-05,"legacy":false,"w26":null},{"name":"Muirlea Farm","n":1,"mw":0.02,"r":43.23,"H":20.5,"D":13.0,"a5":0.000115,"a6":0.000115,"legacy":false,"w26":null},{"name":"Hillfield","n":1,"mw":0.005,"r":47.67,"H":15.0,"D":5.5,"a5":3e-05,"a6":3e-05,"legacy":false,"w26":null},{"name":"Cargo Farm Cottage","n":2,"mw":0.04,"r":47.0,"H":20.6,"D":12.8,"a5":0.000114,"a6":0.000114,"legacy":false,"w26":null},{"name":"Land NW of the Batts","n":1,"mw":0.015,"r":47.54,"H":15.5,"D":11.1,"a5":6.2e-05,"a6":6.2e-05,"legacy":false,"w26":null},{"name":"Kirkpatrick Hill","n":1,"mw":0.011,"r":39.45,"H":18.3,"D":13.0,"a5":0.00016,"a6":0.00016,"legacy":false,"w26":null},{"name":"Burnhouse","n":1,"mw":0.015,"r":43.0,"H":15.0,"D":8.5,"a5":7.1e-05,"a6":7.1e-05,"legacy":false,"w26":null},{"name":"The Beeches","n":1,"mw":0.02,"r":46.05,"H":20.6,"D":13.1,"a5":9e-05,"a6":9e-05,"legacy":false,"w26":null},{"name":"Symington Mains Farm","n":1,"mw":0.02,"r":46.23,"H":20.5,"D":13.0,"a5":8.8e-05,"a6":8.8e-05,"legacy":false,"w26":null},{"name":"Newton of Wiston","n":1,"mw":0.015,"r":42.62,"H":15.1,"D":8.5,"a5":7.4e-05,"a6":7.4e-05,"legacy":false,"w26":null},{"name":"Midhill","n":1,"mw":0.015,"r":43.6,"H":20.6,"D":12.8,"a5":0.00011,"a6":0.00011,"legacy":false,"w26":null},{"name":"Whinney Rig","n":1,"mw":0.1,"r":36.11,"H":36.5,"D":19.2,"a5":0.000386,"a6":0.000386,"legacy":false,"w26":null},{"name":"Newtonhead","n":1,"mw":0.06,"r":49.6,"H":37.0,"D":23.6,"a5":0.000137,"a6":0.000137,"legacy":false,"w26":null},{"name":"Gaups Hill Farm","n":1,"mw":0.01,"r":49.67,"H":18.8,"D":7.3,"a5":3.5e-05,"a6":3.5e-05,"legacy":false,"w26":null},{"name":"South Melbourne Farm","n":1,"mw":0.006,"r":43.09,"H":15.2,"D":5.6,"a5":4.7e-05,"a6":4.7e-05,"legacy":false,"w26":null},{"name":"Walston Braehead Farm","n":3,"mw":0.18,"r":45.46,"H":20.5,"D":13.1,"a5":0.000164,"a6":0.000164,"legacy":false,"w26":null},{"name":"Easton Farm","n":1,"mw":0.02,"r":47.68,"H":20.5,"D":13.0,"a5":7.7e-05,"a6":7.7e-05,"legacy":false,"w26":null},{"name":"Lochmailing","n":1,"mw":0.015,"r":40.75,"H":15.6,"D":10.8,"a5":0.000113,"a6":0.000113,"legacy":false,"w26":null},{"name":"Pumro Fell","n":1,"mw":0.0015,"r":27.62,"H":12.2,"D":1.7,"a5":6.1e-05,"a6":6.1e-05,"legacy":false,"w26":null},{"name":"Rivox","n":1,"mw":0.015,"r":23.37,"H":15.1,"D":8.6,"a5":0.000513,"a6":0.000513,"legacy":false,"w26":null},{"name":"Land at Arthurshiels","n":1,"mw":0.02,"r":44.8,"H":20.6,"D":13.1,"a5":0.000101,"a6":0.000101,"legacy":false,"w26":null},{"name":"Hyndshawland","n":1,"mw":0.02,"r":43.7,"H":20.6,"D":13.1,"a5":0.000112,"a6":0.000112,"legacy":false,"w26":null},{"name":"East Millrig","n":1,"mw":0.015,"r":41.62,"H":20.6,"D":13.1,"a5":0.000135,"a6":0.000135,"legacy":false,"w26":null},{"name":"Braco Farm","n":2,"mw":0.06,"r":49.03,"H":15.5,"D":11.1,"a5":7.7e-05,"a6":7.7e-05,"legacy":false,"w26":null},{"name":"Mallshill","n":1,"mw":0.005,"r":37.61,"H":10.0,"D":5.5,"a5":6.9e-05,"a6":6.9e-05,"legacy":false,"w26":null},{"name":"Brockhouse","n":1,"mw":0.011,"r":47.91,"H":18.3,"D":13.0,"a5":7.3e-05,"a6":7.3e-05,"legacy":false,"w26":null},{"name":"Broom Hills","n":1,"mw":0.01,"r":40.23,"H":15.0,"D":7.0,"a5":7.6e-05,"a6":7.6e-05,"legacy":false,"w26":null},{"name":"Land SW of Copland Farm","n":1,"mw":0.011,"r":41.59,"H":18.0,"D":13.0,"a5":0.00013,"a6":0.00013,"legacy":false,"w26":null},{"name":"Birkenside Farmhouse","n":1,"mw":0.05,"r":48.47,"H":26.6,"D":19.2,"a5":0.000113,"a6":0.000113,"legacy":false,"w26":null},{"name":"Libberton Mains Farm","n":1,"mw":0.02,"r":47.12,"H":20.6,"D":13.1,"a5":8.2e-05,"a6":8.2e-05,"legacy":false,"w26":null},{"name":"SW of Bankhouse Farm","n":1,"mw":0.012,"r":45.97,"H":18.9,"D":7.2,"a5":4.9e-05,"a6":4.9e-05,"legacy":false,"w26":null},{"name":"Lammerlaw Farm 2","n":2,"mw":0.044,"r":44.5,"H":18.3,"D":13.0,"a5":0.000141,"a6":0.000141,"legacy":false,"w26":null},{"name":"Green Croft","n":1,"mw":2.0,"r":49.86,"H":24.6,"D":19.2,"a5":9.8e-05,"a6":9.8e-05,"legacy":false,"w26":null},{"name":"Cormiston Farm","n":1,"mw":0.02,"r":41.11,"H":18.3,"D":13.0,"a5":0.000137,"a6":0.000137,"legacy":false,"w26":null},{"name":"Hartsop","n":1,"mw":0.015,"r":40.89,"H":15.4,"D":11.1,"a5":0.000114,"a6":0.000114,"legacy":false,"w26":null},{"name":"Parkhouse Farm","n":2,"mw":0.04,"r":44.07,"H":22.0,"D":10.4,"a5":0.000123,"a6":0.000123,"legacy":false,"w26":null},{"name":"Shankfield Head","n":2,"mw":0.04,"r":39.89,"H":20.0,"D":7.0,"a5":0.000119,"a6":0.000119,"legacy":false,"w26":null},{"name":"Cambwell","n":1,"mw":0.011,"r":39.85,"H":18.4,"D":13.0,"a5":0.000154,"a6":0.000154,"legacy":false,"w26":null},{"name":"South of Hyndfordwells Farm","n":3,"mw":0.18,"r":45.34,"H":20.6,"D":13.1,"a5":0.000166,"a6":0.000166,"legacy":false,"w26":null},{"name":"Rose Cottage","n":1,"mw":0.006,"r":44.82,"H":15.0,"D":5.5,"a5":3.9e-05,"a6":3.9e-05,"legacy":false,"w26":null},{"name":"Hillend Farm","n":1,"mw":0.011,"r":39.67,"H":18.3,"D":13.0,"a5":0.000157,"a6":0.000157,"legacy":false,"w26":null},{"name":"Land N of Midtown Farm","n":1,"mw":0.05,"r":47.86,"H":24.6,"D":19.2,"a5":0.000117,"a6":0.000117,"legacy":false,"w26":null},{"name":"Clyde Extension","n":54,"mw":162.0,"r":29.9,"H":87.2,"D":103.4,"a5":0.038661,"a6":0.031712,"legacy":false,"w26":null},{"name":"W of Hyndfordwells Farm","n":1,"mw":0.02,"r":45.69,"H":15.0,"D":10.4,"a5":6.8e-05,"a6":6.8e-05,"legacy":false,"w26":null},{"name":"Blackdyke Farm Riding Centre","n":1,"mw":0.01,"r":44.37,"H":20.0,"D":7.0,"a5":5.6e-05,"a6":5.6e-05,"legacy":false,"w26":null},{"name":"Cottage Farmhouse","n":1,"mw":0.011,"r":49.29,"H":18.3,"D":13.0,"a5":6.5e-05,"a6":6.5e-05,"legacy":false,"w26":null},{"name":"Lampits Farm 2","n":1,"mw":0.25,"r":49.98,"H":49.5,"D":30.0,"a5":0.000187,"a6":0.000187,"legacy":false,"w26":null},{"name":"Land NW of West Morriston Fm","n":1,"mw":0.25,"r":49.98,"H":49.5,"D":30.0,"a5":0.000187,"a6":0.000187,"legacy":false,"w26":null},{"name":"Land E of Mossbank Langshaw","n":1,"mw":0.011,"r":42.98,"H":18.3,"D":13.0,"a5":0.000115,"a6":0.000115,"legacy":false,"w26":null},{"name":"Middle Muir WF","n":15,"mw":51.0,"r":45.57,"H":85.5,"D":114.0,"a5":0.004998,"a6":0.002992,"legacy":false,"w26":null},{"name":"Glenkerie Ext","n":6,"mw":15.0,"r":29.67,"H":60.0,"D":80.0,"a5":0.008996,"a6":0.005464,"legacy":false,"w26":null},{"name":"Lion Hill WF","n":4,"mw":9.2,"r":29.27,"H":80.0,"D":93.0,"a5":0.009548,"a6":0.008717,"legacy":false,"w26":null},{"name":"Townfoot","n":1,"mw":0.01,"r":43.87,"H":18.3,"D":13.0,"a5":0.000106,"a6":0.000106,"legacy":false,"w26":null},{"name":"Windy Edge","n":9,"mw":22.5,"r":22.67,"H":75.0,"D":90.0,"a5":0.027652,"a6":0.027652,"legacy":false,"w26":null},{"name":"Rose Cottage 2","n":1,"mw":0.006,"r":44.87,"H":15.0,"D":5.5,"a5":3.9e-05,"a6":3.9e-05,"legacy":false,"w26":null},{"name":"East of Newton of Covington","n":2,"mw":0.04,"r":44.56,"H":22.0,"D":10.4,"a5":0.000118,"a6":0.000118,"legacy":false,"w26":null},{"name":"Bailey Town Farm","n":1,"mw":0.01,"r":37.86,"H":15.0,"D":13.2,"a5":0.000179,"a6":0.000179,"legacy":false,"w26":null},{"name":"Kilravoch","n":1,"mw":0.0012,"r":39.32,"H":12.0,"D":2.0,"a5":2.2e-05,"a6":2.2e-05,"legacy":false,"w26":null},{"name":"Crookedstane Farm","n":4,"mw":9.2,"r":31.51,"H":80.0,"D":93.0,"a5":0.007618,"a6":0.006928,"legacy":false,"w26":null},{"name":"South Melbourne Farm 2","n":1,"mw":0.011,"r":42.85,"H":18.4,"D":13.0,"a5":0.000116,"a6":0.000116,"legacy":false,"w26":null},{"name":"Cloich","n":18,"mw":54.0,"r":42.54,"H":70.0,"D":90.0,"a5":0.00649,"a6":0.00649,"legacy":true,"w26":0.0052009697038521655},{"name":"Solwaybank","n":15,"mw":30.0,"r":25.65,"H":76.5,"D":100.0,"a5":0.028993,"a6":0.026908,"legacy":false,"w26":null},{"name":"SW of Kettleshill Farmhouse","n":1,"mw":0.012,"r":48.24,"H":15.4,"D":7.3,"a5":3.8e-05,"a6":3.8e-05,"legacy":false,"w26":null},{"name":"Trough Head Farm","n":2,"mw":0.02,"r":36.46,"H":15.0,"D":13.2,"a5":0.00029,"a6":0.00029,"legacy":false,"w26":null},{"name":"Twentyshilling Hill","n":9,"mw":27.0,"r":48.03,"H":81.5,"D":117.0,"a5":0.003187,"a6":0.003114,"legacy":false,"w26":null},{"name":"72 Carlisle Road","n":2,"mw":0.17,"r":44.8,"H":36.6,"D":23.5,"a5":0.000298,"a6":0.000298,"legacy":false,"w26":null},{"name":"East of Whitslaid Farm","n":2,"mw":0.05,"r":49.75,"H":18.0,"D":14.0,"a5":9.4e-05,"a6":9.4e-05,"legacy":false,"w26":null},{"name":"Solway BeckBurn WF","n":9,"mw":31.05,"r":36.87,"H":73.8,"D":105.0,"a5":0.0076,"a6":0.006972,"legacy":false,"w26":null},{"name":"SW of Clackmae Farmhouse","n":1,"mw":0.1,"r":44.96,"H":22.6,"D":23.6,"a5":0.000186,"a6":0.000186,"legacy":false,"w26":null},{"name":"Whins Farm","n":1,"mw":0.09,"r":32.86,"H":22.6,"D":23.6,"a5":0.000593,"a6":0.000593,"legacy":false,"w26":null},{"name":"South Slipperfield Farmhouse","n":1,"mw":0.05,"r":48.39,"H":16.5,"D":21.0,"a5":0.000111,"a6":0.000111,"legacy":false,"w26":null},{"name":"Jockstown Farm","n":1,"mw":0.1,"r":34.09,"H":22.0,"D":24.4,"a5":0.00054,"a6":0.00054,"legacy":false,"w26":null},{"name":"Deanfoot Farmhouse","n":1,"mw":0.05,"r":49.21,"H":18.1,"D":21.0,"a5":0.000106,"a6":0.000106,"legacy":false,"w26":null},{"name":"West of M6","n":1,"mw":0.5,"r":44.03,"H":40.0,"D":54.0,"a5":0.000553,"a6":0.000553,"legacy":false,"w26":null},{"name":"Hallburn Farm","n":6,"mw":18.0,"r":39.81,"H":76.5,"D":100.0,"a5":0.0045,"a6":0.0045,"legacy":false,"w26":null},{"name":"Burnswark Garage","n":1,"mw":0.5,"r":30.77,"H":24.9,"D":23.5,"a5":0.000746,"a6":0.000746,"legacy":false,"w26":null},{"name":"Whitelaw Brae WF","n":14,"mw":50.4,"r":23.85,"H":80.0,"D":107.0,"a5":0.037169,"a6":0.037169,"legacy":false,"w26":null},{"name":"Priestgill Littlegill Farm","n":7,"mw":22.4,"r":36.91,"H":119.3,"D":150.0,"a5":0.014344,"a6":0.014344,"legacy":true,"w26":0.009770299946360759},{"name":"Pines Burn SW of Lurgiescleuch","n":11,"mw":36.3,"r":27.75,"H":77.7,"D":127.2,"a5":0.034631,"a6":0.034631,"legacy":true,"w26":0.023946424236984478},{"name":"Loganhead","n":8,"mw":25.6,"r":18.58,"H":75.0,"D":120.0,"a5":0.080088,"a6":0.080088,"legacy":true,"w26":0.05353124133341851},{"name":"Crossdykes","n":10,"mw":48.0,"r":16.65,"H":110.0,"D":133.0,"a5":0.10035,"a6":0.088689,"legacy":false,"w26":null},{"name":"Hopsrig","n":12,"mw":42.0,"r":16.13,"H":90.0,"D":100.0,"a5":0.111134,"a6":0.111134,"legacy":true,"w26":0.07929285141285382},{"name":"Little Hartfell Castlemilk","n":9,"mw":49.896,"r":16.48,"H":93.5,"D":133.0,"a5":0.131787,"a6":0.131787,"legacy":true,"w26":0.08675546267787874}],"validation":[{"farm":"Craig","fitted":true,"meas":0.0223,"m14":0.0351,"m26":0.0238767342825605,"alt":null,"campaign":"STM-C, STM-D (Craig Hill, 2021)"},{"farm":"Langhope Rig","fitted":true,"meas":0.0306,"m14":0.0403,"m26":0.031343,"alt":null,"campaign":"STM-E (Langhope Rig, 2021)"},{"farm":"Clyde","fitted":true,"meas":0.0499,"m14":0.074,"m26":0.047426,"alt":null,"campaign":"STM-F (Clyde, 2013)"},{"farm":"Ewe Hill","fitted":false,"meas":0.0602,"m14":0.0886,"m26":0.056921,"alt":0.0541723141986738,"campaign":"none (Siemens model fitted at Clyde)"},{"farm":"Glenkerie","fitted":true,"meas":0.0115,"m14":0.0162,"m26":0.011923,"alt":null,"campaign":"STM-B (Glenkerie, 2021)"},{"farm":"Middle Muir","fitted":true,"meas":0.0036,"m14":0.0062,"m26":0.002992,"alt":null,"campaign":"STM-A (Middlemuir, 2020)"}],"engine_tests":[{"model":"A_Senvion","D":62,"H":45,"r":42.3,"nm":0.0004997160309544772},{"model":"A_Senvion","D":93,"H":67.9,"r":19.02,"nm":0.009512443933184418},{"model":"A_Senvion","D":133,"H":110,"r":16.65,"nm":0.02082305521595879},{"model":"A_Senvion","D":166,"H":110,"r":17.38,"nm":0.023405901166095838},{"model":"A_Senvion","D":100,"H":90,"r":35.0,"nm":0.0017940855965085704},{"model":"B_Vestas","D":62,"H":45,"r":42.3,"nm":0.0007641265749634477},{"model":"B_Vestas","D":93,"H":67.9,"r":19.02,"nm":0.01348131262374389},{"model":"B_Vestas","D":133,"H":110,"r":16.65,"nm":0.029137714910051342},{"model":"B_Vestas","D":166,"H":110,"r":17.38,"nm":0.03268111695617775},{"model":"B_Vestas","D":100,"H":90,"r":35.0,"nm":0.002535681543831279},{"model":"C_Enercon","D":62,"H":45,"r":42.3,"nm":0.0006242476473390759},{"model":"C_Enercon","D":93,"H":67.9,"r":19.02,"nm":0.012149850255474002},{"model":"C_Enercon","D":133,"H":110,"r":16.65,"nm":0.02647829163047371},{"model":"C_Enercon","D":166,"H":110,"r":17.38,"nm":0.02966646861450248},{"model":"C_Enercon","D":100,"H":90,"r":35.0,"nm":0.0022491960429122534},{"model":"D_Nordex","D":62,"H":45,"r":42.3,"nm":0.0006743901336757776},{"model":"D_Nordex","D":93,"H":67.9,"r":19.02,"nm":0.011847765522203218},{"model":"D_Nordex","D":133,"H":110,"r":16.65,"nm":0.025343203580624238},{"model":"D_Nordex","D":166,"H":110,"r":17.38,"nm":0.02840939066802919},{"model":"D_Nordex","D":100,"H":90,"r":35.0,"nm":0.0022734375469222767},{"model":"E_GE","D":62,"H":45,"r":42.3,"nm":0.000823956236998401},{"model":"E_GE","D":93,"H":67.9,"r":19.02,"nm":0.013870901975071185},{"model":"E_GE","D":133,"H":110,"r":16.65,"nm":0.028665935525451904},{"model":"E_GE","D":166,"H":110,"r":17.38,"nm":0.03235393633686176},{"model":"E_GE","D":100,"H":90,"r":35.0,"nm":0.0028706524766679634},{"model":"F_Siemens","D":62,"H":45,"r":42.3,"nm":0.0006919847100953065},{"model":"F_Siemens","D":93,"H":67.9,"r":19.02,"nm":0.011385088739319966},{"model":"F_Siemens","D":133,"H":110,"r":16.65,"nm":0.02354057418432583},{"model":"F_Siemens","D":166,"H":110,"r":17.38,"nm":0.026435867926562277},{"model":"F_Siemens","D":100,"H":90,"r":35.0,"nm":0.0022387336143816277}],"sil_range":[0.004614,0.005479],"headroom_worst":0.216682,"err_range":[-0.08179825681703567,0.0675865384976504],"shapley":{"K":0.04912329213851685,"U":0.08417660156885398,"L":0.16285823509510544,"baseline":0.41587884689448695,"total":0.7120369756969632,"total_low":0.6885497227635063,"total_high":0.7275104501697709}};
+</script>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const fmt = (x, d = 1) => x.toLocaleString("en-GB", { minimumFractionDigits: d, maximumFractionDigits: d });
+const pct = (x, d = 1) => fmt(100 * x, d) + "%";
+const B = DATA.budget_nm;
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs = {}, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+function txt(parent, x, y, s, attrs = {}) { const t = el("text", { x, y, ...attrs }, parent); t.textContent = s; return t; }
+const tip = $("tip");
+function showTip(ev, html) { tip.innerHTML = html; tip.style.opacity = 1; const w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = ev.clientX + 14, y = ev.clientY + 14; if (x + w > innerWidth - 8) x = ev.clientX - w - 14; if (y + h > innerHeight - 8) y = ev.clientY - h - 14;
+  tip.style.left = x + "px"; tip.style.top = y + "px"; }
+function hideTip() { tip.style.opacity = 0; }
+
+/* ---------- theme ---------- */
+(() => { const order = ["auto", "light", "dark"]; let i = 0;
+  try { const s = localStorage.getItem("eka-theme"); if (s && order.includes(s)) i = order.indexOf(s); } catch (e) {}
+  const apply = () => { const m = order[i]; if (m === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme", m); $("theme").textContent = "Theme: " + m; };
+  apply(); $("theme").onclick = () => { i = (i + 1) % 3; try { localStorage.setItem("eka-theme", order[i]); } catch (e) {} apply(); };
+})();
+
+/* ---------- the 2026 algorithm (Annex 14, Section 3), port of src/eskdalemuir/algorithm.py ---------- */
+const ENGINE = (() => {
+  const K = DATA.constants;
+  const n = Math.round((K.fmax - K.fmin) / K.df) + 1;
+  const F = new Float64Array(n);
+  for (let i = 0; i < n; i++) F[i] = Math.round((K.fmin + i * K.df) * 1e6) / 1e6;
+  const noise = f => { const l = Math.log10(f); return Math.pow(10, K.a0 + K.a1 * l + K.a2 * l * l); };
+  const S0 = f => { const C = f <= K.fc ? 1 : Math.pow(f / K.fc, -2); const Bf = f < K.fcmax ? 1 / K.nch + (K.nch - 1) / (2 * K.nch) * (1 + Math.cos(Math.PI * f / K.fcmax)) : 1 / K.nch;
+    return C * C * Math.exp(-2 * Math.PI * f * K.tstar) * Bf; };
+  let mx = 0; for (let i = 0; i < n; i++) mx = Math.max(mx, S0(F[i]) / noise(F[i]));
+  const alpha = K.snrmax / mx;
+  const F0 = f => { const s = alpha * S0(f), m = noise(f); return (s / m) / (s + m); };
+  const f0n = F0(K.fnorm);
+  const FW = new Float64Array(n); for (let i = 0; i < n; i++) FW[i] = F0(F[i]) / f0n;
+  function sourceWeighted(D, H, c) {
+    const A = Math.PI * (D / 2) ** 2, vw = K.vref * Math.log(H / K.zl) / Math.log(K.zref / K.zl);
+    const fbp = 3 * c.v_tip / (Math.PI * D), sc = A * vw ** 3, kmax = Math.floor(K.fmax / fbp + 1e-12);
+    const out = new Float64Array(n);
+    for (let i = 0; i < n; i++) {
+      const f = F[i]; let s = c.COBN * sc * Math.pow(f, -2);
+      for (let j = 0; j < 4; j++) s += c.CBM[j] * sc * Math.exp(-((f - c.fj[j]) ** 2) / (2 * c.sj[j] ** 2));
+      for (let k = 1; k <= kmax; k++) s += c.CBP * sc * Math.pow(k, -c.p) * Math.exp(-((f - k * fbp) ** 2) / (2 * c.sBP ** 2));
+      out[i] = s * FW[i];
+    }
+    return out;
+  }
+  function ampFromWeighted(SW, r) {
+    let I = 0, prev = SW[0] * (K.rref / r) * Math.exp(-2 * Math.PI * F[0] * (r - K.rref) / K.qc);
+    for (let i = 1; i < n; i++) { const y = SW[i] * (K.rref / r) * Math.exp(-2 * Math.PI * F[i] * (r - K.rref) / K.qc); I += (prev + y) / 2 * (F[i] - F[i - 1]); prev = y; }
+    return Math.sqrt(I) * 1e9;
+  }
+  const amplitude = (D, H, r, model) => ampFromWeighted(sourceWeighted(D, H, DATA.latt[model]), r);
+  return { amplitude, sourceWeighted, ampFromWeighted };
+})();
+
+/* ---------- engine self-check against the Python reference ---------- */
+(() => { let worst = 0;
+  for (const t of DATA.engine_tests) worst = Math.max(worst, Math.abs(ENGINE.amplitude(t.D, t.H, t.r, t.model) / t.nm - 1));
+  const ok = worst < 1e-6; $("engine").classList.add(ok ? "ok" : "bad");
+  $("engine-text").textContent = ok ? `Engine check passed: ${DATA.engine_tests.length} cases match the Python reference (max difference ${worst.toExponential(1)})`
+                                    : `Engine check FAILED: max difference ${worst.toExponential(2)}`;
+  $("asof").textContent = `Public record as of ${DATA.as_of}`;
+})();
+
+/* ---------- KPIs ---------- */
+(() => { const f = DATA.farms, tot2 = f.reduce((s, r) => s + r.a5 * r.a5, 0), C = Math.sqrt(tot2);
+  const near = f.filter(r => r.r < 17), b17 = near.reduce((s, r) => s + r.a5 * r.a5, 0) / tot2, c17 = near.reduce((s, r) => s + r.mw, 0) / f.reduce((s, r) => s + r.mw, 0);
+  const v = DATA.validation, nIn = v.filter(r => r.fitted).length;
+  const k = [[`${B}<small> nm</small>`, "The budget: median background vibration on noisy days (2005)"],
+             [pct(1 - C * C / (B * B)), "Of the budget still free, published worst case (squared-amplitude terms)"],
+             [`${pct(b17, 0)}<small> / ${pct(c17, 0)}</small>`, "Budget used / capacity held by farms within 17 km"],
+             [`${nIn}<small> of ${v.length}</small>`, "Model checks made on the models' own fitting data"]];
+  $("kpis").innerHTML = k.map(([v, l]) => `<div class="kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
+})();
+
+/* ---------- responsive helper: charts are drawn at the container's real pixel width ---------- */
+function responsive(container, draw) { let w0 = 0; const run = () => { const w = Math.max(280, Math.floor(container.clientWidth)); if (w !== w0) { w0 = w; draw(w); } };
+  new ResizeObserver(run).observe(container); run(); return () => { w0 = 0; run(); }; }
+
+/* ---------- Where the budget goes ---------- */
+(() => {
+  const farms = DATA.farms.slice().sort((p, q) => p.r - q.r);
+  const tot2 = farms.reduce((s, r) => s + r.a5 * r.a5, 0), totMW = farms.reduce((s, r) => s + r.mw, 0);
+  let c2 = 0, cm = 0; const pts = farms.map(r => { c2 += r.a5 * r.a5; cm += r.mw; return { r, b: c2 / tot2, c: cm / totMW }; });
+  const box = $("conc-chart"); let geo = null;
+  function draw(W) {
+    box.innerHTML = ""; const H = W < 480 ? 250 : 310, L = 42, R = 10, T = 10, Bt = 40;
+    const X = km => L + (km - 15) / 35 * (W - L - R), Y = s => T + (1 - s) * (H - T - Bt);
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": "Cumulative share of budget used and of capacity, by distance from the array" }, box);
+    const ax = el("g", { class: "axis" }, svg);
+    for (const s of [0, .25, .5, .75, 1]) { el("line", { x1: L, x2: W - R, y1: Y(s), y2: Y(s) }, ax); txt(ax, L - 6, Y(s) + 4, `${s * 100}%`, { "text-anchor": "end" }); }
+    for (const k of (W < 480 ? [15, 25, 35, 45] : [15, 20, 25, 30, 35, 40, 45, 50])) txt(ax, X(k), H - Bt + 18, k, { "text-anchor": "middle" });
+    txt(ax, (L + W - R) / 2, H - 4, "Distance from the array (km)", { "text-anchor": "middle" });
+    const path = key => pts.reduce((d, p) => d + `H${X(p.r.r)}V${Y(p[key])}`, `M${X(15)} ${Y(0)}`) + `H${X(50)}`;
+    el("path", { d: path("c"), fill: "none", stroke: "var(--grey)", "stroke-width": 2 }, svg);
+    el("path", { d: path("b"), fill: "none", stroke: "var(--accent)", "stroke-width": 2.5 }, svg);
+    const cut = el("line", { y1: T, y2: H - Bt, stroke: "var(--ref)", "stroke-dasharray": "4 4" }, svg);
+    const db = el("circle", { r: 5, fill: "var(--accent)", stroke: "var(--surface)", "stroke-width": 2 }, svg);
+    const dc = el("circle", { r: 5, fill: "var(--grey)", stroke: "var(--surface)", "stroke-width": 2 }, svg);
+    const hl = el("circle", { r: 5, fill: "none", stroke: "var(--accent)", "stroke-width": 2, opacity: 0 }, svg);
+    const hit = el("rect", { x: L, y: T, width: W - L - R, height: H - T - Bt, fill: "transparent" }, svg);
+    const pick = ev => { const bb = svg.getBoundingClientRect(), km = 15 + ((ev.clientX - bb.left) - L) / (W - L - R) * 35;
+      let best = pts[0]; for (const p of pts) if (Math.abs(p.r.r - km) < Math.abs(best.r.r - km)) best = p; return best; };
+    hit.addEventListener("pointermove", ev => { const best = pick(ev);
+      hl.setAttribute("cx", X(best.r.r)); hl.setAttribute("cy", Y(best.b)); hl.setAttribute("opacity", 1);
+      showTip(ev, `<b>${best.r.name}</b><br>${fmt(best.r.r, 2)} km · ${fmt(best.r.mw, best.r.mw < 1 ? 3 : 1)} MW · ${best.r.n} turbine${best.r.n > 1 ? "s" : ""}<br>${fmt(best.r.a5, 6)} nm, ${pct(best.r.a5 ** 2 / tot2)} of the budget used<br>Cumulative: ${pct(best.b)} of budget, ${pct(best.c)} of capacity`); });
+    hit.addEventListener("pointerleave", () => { hideTip(); hl.setAttribute("opacity", 0); });
+    geo = { X, Y, cut, db, dc }; update();
+  }
+  function update() {
+    const d = +$("cut").value, near = farms.filter(r => r.r < d);
+    const b = near.reduce((s, r) => s + r.a5 * r.a5, 0) / tot2, c = near.reduce((s, r) => s + r.mw, 0) / totMW;
+    $("cut-val").textContent = `${fmt(d, 1)} km`; $("cut-b").textContent = pct(b); $("cut-c").textContent = pct(c);
+    $("cut-n").textContent = near.length; $("cut-mw").textContent = fmt(near.reduce((s, r) => s + r.mw, 0), 0);
+    if (!geo) return; const { X, Y, cut, db, dc } = geo;
+    cut.setAttribute("x1", X(d)); cut.setAttribute("x2", X(d));
+    db.setAttribute("cx", X(d)); db.setAttribute("cy", Y(b)); dc.setAttribute("cx", X(d)); dc.setAttribute("cy", Y(c));
+  }
+  $("cut").addEventListener("input", update); responsive(box, draw);
+  const top = DATA.farms.slice().sort((p, q) => q.a5 - p.a5).slice(0, 10);
+  $("top-table").innerHTML = `<div style="overflow-x:auto"><table class="data"><thead><tr><th>Farm</th><th class="r">Distance (km)</th><th class="r">MW</th><th class="r">Share of budget used</th><th>Assessed on</th></tr></thead><tbody>${
+    top.map(r => `<tr><td>${r.name}</td><td class="r">${fmt(r.r, 2)}</td><td class="r">${fmt(r.mw, 1)}</td><td class="r">${pct(r.a5 ** 2 / tot2)}</td><td>${r.legacy ? "2014 algorithm" : "2026 algorithm"}</td></tr>`).join("")}</tbody></table></div>`;
+})();
+
+/* ---------- Caution ledger ---------- */
+(() => {
+  const f = DATA.farms, [eLo, eHi] = DATA.err_range;
+  const err = $("err"); err.min = (100 * eLo).toFixed(2); err.max = (100 * eHi).toFixed(2); err.step = "0.01"; err.value = "0";
+  $("err-hint").textContent = `Range seen on 12 validation farms with the same method: ${fmt(-100 * eLo, 1)}% low to ${fmt(100 * eHi, 1)}% high.`;
+  function C(useK, util, useL, e) {
+    let s = 0;
+    for (const r of f) { let a = useK ? r.a6 : r.a5; if (useL && r.legacy) a = r.w26 / (1 + e); s += a * a; }
+    return Math.sqrt(s) * util;
+  }
+  const c0 = C(false, 1, false, 0), base0 = 1 - c0 * c0 / (B * B), box = $("ledger-bar"); let fr = base0;
+  function drawBar(W) {
+    box.innerHTML = ""; const H = 64;
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": "Share of the budget used and free" }, box);
+    el("rect", { x: 0, y: 18, width: (1 - fr) * W, height: 26, rx: 6, fill: "var(--grey)" }, svg);
+    el("rect", { x: (1 - fr) * W + 2, y: 18, width: Math.max(0, fr * W - 2), height: 26, rx: 6, fill: "var(--accent)" }, svg);
+    const bx = (1 - base0) * W; el("line", { x1: bx, x2: bx, y1: 12, y2: 50, stroke: "var(--ink)", "stroke-width": 1.5, "stroke-dasharray": "3 3" }, svg);
+    txt(svg, Math.min(W - 4, Math.max(4, bx)), 10, `As published: ${pct(base0)} free`, { "font-size": 12, fill: "var(--ink-2)", "text-anchor": bx < 90 ? "start" : bx > W - 90 ? "end" : "middle" });
+    txt(svg, 0, 61, "Used", { "font-size": 12, fill: "var(--ink-2)" });
+    txt(svg, W, 61, `Free: ${pct(fr)}`, { "font-size": 12, fill: "var(--ink-2)", "text-anchor": "end" });
+  }
+  const redraw = responsive(box, drawBar);
+  function update() {
+    const k = $("sw-k").checked, u = +$("util").value, l = $("sw-l").checked, e = +err.value / 100;
+    $("util-val").textContent = fmt(u, 3); $("err-val").textContent = (e >= 0 ? "+" : "") + fmt(100 * e, 1) + "%";
+    $("err-ctl").style.opacity = l ? 1 : .45; err.disabled = !l;
+    const c = C(k, u, l, e), h = Math.sqrt(Math.max(0, B * B - c * c)); fr = 1 - c * c / (B * B);
+    $("l-free").textContent = pct(fr); $("l-head").textContent = fmt(h, 4) + " nm"; $("l-c").textContent = fmt(c, 4) + " nm";
+    $("l-sil").textContent = fmt(h / Math.sqrt(2000), 6); redraw();
+  }
+  for (const id of ["sw-k", "util", "sw-l", "err"]) $(id).addEventListener("input", update);
+  for (const b of document.querySelectorAll(".presets button")) b.addEventListener("click", () => { $("util").value = b.dataset.u; update(); });
+  update();
+  const s = DATA.shapley, rows = [["Known turbine makers", s.K], ["Utilisation (2014 estimate)", s.U], ["Legacy farms on 2026 model", s.L]];
+  const mx = Math.max(...rows.map(r => r[1]));
+  $("shapley").innerHTML = rows.map(([n, v]) => `<div class="shap"><span>${n}</span><span class="track"><span style="width:${100 * v / mx}%"></span></span><b>+${fmt(100 * v, 1)}</b></div>`).join("") +
+    `<p class="note">Together: ${pct(s.baseline)} free as published, ${pct(s.total)} with all three removed (range ${pct(s.total_low)} to ${pct(s.total_high)} from the legacy reproduction error).</p>`;
+})();
+
+/* ---------- Single-turbine calculator ---------- */
+(() => {
+  const sel = $("c-model"); for (const k of Object.keys(DATA.latt)) { const o = document.createElement("option"); o.value = k; o.textContent = DATA.latt[k].label; sel.appendChild(o); }
+  sel.value = "B_Vestas";
+  const [SLO, SHI] = DATA.sil_range, AH = DATA.headroom_worst, box = $("calc-chart");
+  let W = 600;
+  function draw() {
+    const D = +$("c-d").value, Hh = +$("c-h").value, P = +$("c-p").value, rr = +$("c-r").value, m = sel.value;
+    const ok = D >= 10 && D <= 250 && Hh >= 20 && Hh <= 200 && P > 0 && P <= 15 && rr >= 15 && rr <= 50 && Hh > D / 2;
+    box.innerHTML = "";
+    if (!ok) { $("c-verdict").innerHTML = "Enter a rotor diameter of 10 to 250 m, a hub height of 20 to 200 m and above half the rotor diameter, a rated power up to 15 MW, and a distance of 15 to 50 km.";
+      for (const id of ["c-amp", "c-silv", "c-share", "c-mind"]) $(id).textContent = "–"; return; }
+    const SW = ENGINE.sourceWeighted(D, Hh, DATA.latt[m]);
+    const ds = []; for (let i = 0; i <= 70; i++) ds.push(15 + i * 0.5);
+    const amps = ds.map(d => ENGINE.ampFromWeighted(SW, d));
+    const a = ENGINE.ampFromWeighted(SW, rr), v = a / Math.sqrt(P), lo = SLO * Math.sqrt(P), hi = SHI * Math.sqrt(P);
+    const H = W < 480 ? 260 : 310, L = 54, R = 10, T = 26, Bt = 40, ymax = Math.max(amps[0], hi) * 1.08;
+    const X = d => L + (d - 15) / 35 * (W - L - R), Y = y => T + (1 - y / ymax) * (H - T - Bt);
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": "Predicted amplitude at the array against distance" }, box);
+    const ax = el("g", { class: "axis" }, svg);
+    const step = [0.0025, 0.005, 0.01, 0.02, 0.05, 0.1].find(s => ymax / s <= 6) || 0.2;
+    for (let y = 0; y <= ymax + 1e-12; y += step) { el("line", { x1: L, x2: W - R, y1: Y(y), y2: Y(y) }, ax); txt(ax, L - 6, Y(y) + 4, fmt(y, step < 0.005 ? 4 : 3), { "text-anchor": "end" }); }
+    for (const k of (W < 480 ? [15, 25, 35, 45] : [15, 20, 25, 30, 35, 40, 45, 50])) txt(ax, X(k), H - Bt + 18, k, { "text-anchor": "middle" });
+    txt(ax, (L + W - R) / 2, H - 4, "Distance from the array (km)", { "text-anchor": "middle" });
+    txt(ax, L, T - 12, "Amplitude at the array (nm)", { "text-anchor": "start" });
+    el("rect", { x: L, width: W - L - R, y: Y(hi), height: Math.max(0, Y(lo) - Y(hi)), fill: "var(--surface-2)" }, svg);
+    el("line", { x1: L, x2: W - R, y1: Y(lo), y2: Y(lo), stroke: "var(--ref)", "stroke-dasharray": "4 4" }, svg);
+    el("line", { x1: L, x2: W - R, y1: Y(hi), y2: Y(hi), stroke: "var(--ref)", "stroke-dasharray": "4 4" }, svg);
+    txt(svg, W - R, Y(hi) - 6, `SIL range × √${fmt(P, 1)} MW`, { "text-anchor": "end", "font-size": 11.5, fill: "var(--ink-2)" });
+    el("path", { d: ds.map((d, i) => `${i ? "L" : "M"}${X(d)} ${Y(amps[i])}`).join(""), fill: "none", stroke: "var(--accent)", "stroke-width": 2.5 }, svg);
+    el("circle", { cx: X(rr), cy: Y(a), r: 6, fill: "var(--accent)", stroke: "var(--surface)", "stroke-width": 2 }, svg);
+    const hit = el("rect", { x: L, y: T, width: W - L - R, height: H - T - Bt, fill: "transparent" }, svg);
+    hit.addEventListener("pointermove", ev => { const bb = svg.getBoundingClientRect(), d = Math.min(50, Math.max(15, 15 + ((ev.clientX - bb.left) - L) / (W - L - R) * 35));
+      const i = Math.round((d - 15) / 0.5); showTip(ev, `${fmt(ds[i], 1)} km: ${fmt(amps[i], 5)} nm<br>÷ √(rated power) = ${fmt(amps[i] / Math.sqrt(P), 6)} nm/√MW`); });
+    hit.addEventListener("pointerleave", hideTip);
+    const firstBelow = lim => { for (let i = 0; i < ds.length; i++) if (amps[i] / Math.sqrt(P) <= lim) return ds[i]; return null; };
+    const dHi = firstBelow(SHI), dLo = firstBelow(SLO);
+    $("c-amp").textContent = fmt(a, 5) + " nm"; $("c-silv").textContent = fmt(v, 6);
+    $("c-share").textContent = pct(a * a / (AH * AH), 2);
+    $("c-mind").textContent = dHi === null ? "beyond 50 km" : dLo === null ? `${fmt(dHi, 1)} km / beyond 50` : dHi === dLo ? `${fmt(dHi, 1)} km` : `${fmt(dHi, 1)} / ${fmt(dLo, 1)} km`;
+    const verdict = v <= SLO ? "within the whole proposed SIL range" : v <= SHI ? "within the upper end of the range only" : "above the whole proposed SIL range";
+    $("c-verdict").innerHTML = `At ${fmt(rr, 1)} km this turbine is <b>${verdict}</b> (${fmt(v, 6)} against ${SLO} to ${SHI} nm/√MW). The SIL will be set at a single point in that range.`;
+  }
+  for (const id of ["c-model", "c-d", "c-h", "c-p", "c-r"]) $(id).addEventListener("input", draw);
+  responsive(box, w => { W = w; draw(); });
+})();
+
+/* ---------- Validation dot plot ---------- */
+(() => {
+  const v = DATA.validation.slice().sort((p, q) => (q.fitted - p.fitted)), box = $("val-chart");
+  function draw(W) {
+    box.innerHTML = ""; const narrow = W < 560, rowH = narrow ? 44 : 36, T = 26, L = narrow ? 104 : 220, R = 14;
+    const H = T + rowH * v.length + 16 + 40, X = x => L + (x - 0.75) / 1.05 * (W - L - R);
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": "Predicted divided by measured impact for six farms" }, box);
+    const ax = el("g", { class: "axis" }, svg), yAx = H - 40;
+    for (const t of (narrow ? [0.8, 1.2, 1.6] : [0.8, 1, 1.2, 1.4, 1.6, 1.8])) { el("line", { x1: X(t), x2: X(t), y1: T - 8, y2: yAx }, ax); txt(ax, X(t), yAx + 18, fmt(t, 1), { "text-anchor": "middle" }); }
+    txt(ax, (L + W - R) / 2, H - 4, "Predicted ÷ measured", { "text-anchor": "middle" });
+    el("line", { x1: X(1), x2: X(1), y1: T - 12, y2: yAx, stroke: "var(--ref)", "stroke-dasharray": "4 4" }, svg);
+    txt(svg, X(1) + 6, T - 6, "Model = measurement", { "font-size": 11.5, fill: "var(--ink-3)" });
+    v.forEach((r, i) => {
+      const y = T + 14 + i * rowH + (r.fitted ? 0 : 14);
+      txt(svg, 0, narrow ? y : y + 4, r.farm, { "font-size": 13, "font-weight": r.fitted ? 400 : 650, fill: "var(--ink)" });
+      txt(svg, narrow ? 0 : 118, narrow ? y + 15 : y + 4, r.fitted ? "in sample" : "out of sample", { "font-size": 12, "font-weight": r.fitted ? 400 : 650, fill: r.fitted ? "var(--ink-3)" : "var(--accent)" });
+      const r14 = r.m14 / r.meas, r26 = r.m26 / r.meas;
+      el("line", { x1: X(r26), x2: X(r14), y1: y, y2: y, stroke: "var(--grid)", "stroke-width": 2 }, svg);
+      if (r.alt) { const ra = r.alt / r.meas; el("line", { x1: X(ra), x2: X(r26), y1: y, y2: y, stroke: "var(--accent)", "stroke-opacity": .35, "stroke-width": 8, "stroke-linecap": "round" }, svg);
+        txt(svg, (X(ra) + X(r26)) / 2, y - 11, `${fmt(ra, 2)}–${fmt(r26, 2)}`, { "text-anchor": "middle", "font-size": 12, "font-weight": 650, fill: "var(--ink)" }); }
+      const c14 = el("circle", { cx: X(r14), cy: y, r: 6, fill: "var(--surface)", stroke: "var(--grey)", "stroke-width": 2 }, svg);
+      const c26 = el("circle", { cx: X(r26), cy: y, r: 6, fill: "var(--accent)" }, svg);
+      for (const [c, lab, val, nm] of [[c14, "2014 model", r14, r.m14], [c26, "2026 published", r26, r.m26]]) {
+        const hit = el("circle", { cx: c.getAttribute("cx"), cy: y, r: 14, fill: "transparent" }, svg);
+        hit.addEventListener("pointermove", ev => showTip(ev, `<b>${r.farm}</b>, ${lab}<br>${fmt(val, 3)} (${nm} nm predicted, ${r.meas} nm measured)<br>Fitting campaign: ${r.campaign}`));
+        hit.addEventListener("pointerleave", hideTip);
+      }
+    });
+  }
+  responsive(box, draw);
+})();
+$("foot-repo").innerHTML = `Code and data: <a href="${DATA.repo_url}">${DATA.repo_url.replace("https://", "")}</a> · MIT licence.`;
+</script>
+</body>
+</html>
