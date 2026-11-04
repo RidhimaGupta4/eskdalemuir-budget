@@ -1,0 +1,8 @@
+farm,turbines,turbine_model,measured_nm,budget_2014_nm,used_to_fit_2026_model,fitting_campaign
+Craig (Carlesgill),6,Nordex N80 x4 + Enercon E82 x2,0.0223,0.0351,True,"STM-C, STM-D (Craig Hill, 2021)"
+Langhope Rig,10,GE 1.6,0.0306,0.0403,True,"STM-E (Langhope Rig, 2021)"
+Clyde,152,Siemens SWT2.3,0.0499,0.074,True,"STM-F (Clyde, 2013)"
+Ewe Hill,22,Siemens SWT2.3,0.0602,0.0886,False,none (Siemens model fitted at Clyde)
+Glenkerie,11,Vestas V80,0.0115,0.0162,True,"STM-B (Glenkerie, 2021)"
+Middle Muir,15,Senvion 3.4M114,0.0036,0.0062,True,"STM-A (Middlemuir, 2020)"
+Harestanes,68,Gamesa G8x,0.0662,0.0571,False,none; flagged unreliable in Annex 13

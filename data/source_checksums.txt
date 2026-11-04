@@ -1,0 +1,9 @@
+1145c262d54167c1fb9d1c402d290a8a38a3601862f5ce2936ef6c83d32836c3  Eskdalemuir_Consultation__The_2026_Algorithm.pdf  # Annex 14 - The 2026 Algorithm (07/07/2026)
+64fdd61fc8cae0317d23c56802d0e52402f2818ed92c2176ff55509ea38a49e8  Eskdalemuir_Consultation__Headroom_and_SIL_Calculations_Explainer.pdf  # Annex 15 - Headroom and SIL explainer (07/07/2026)
+01dff16dc1cfec4a4604b1437db286070dc39046a3d561e76875bddc3a8f4f94  List_of_Approved_Turbine_Types_Coefficients.pdf  # Annex 5 - LATT coefficients tech note v5.3 (12/02/2026)
+8653165eafce9aed5ece3dfcebddb38b56aa7fcc47a45489728b6d53f0e24525  Eskdalemuir_Wind_Turbine_Seismic_Vibration.pdf  # Annex 13 - Phase 4 refined report AIFCL-101-Phase4-Rev13 (24/11/2023)
+92bfc06dc144a28725201c33a877a1b4ef5c9fb1a8d43666985aebc66f409ff4  Seismic_vibration_produced_by_wind_turbines_in_the_Eskdalemuir_region.pdf  # Annex 12 - 2014 algorithm report FMB 203
+b7b7acdff3da0681a1f90cd7a53a83ee3a6a6a002a5ce781962df77affe84030  Annex_7_-_Example_Output_-_Approved_Turbine_List__SIL_Compliant_original.xlsx  # Annex 7 - example tool output
+c4ae367415ce66bc77eeb5aa1805fff56ad63824669712d9c4546f2b26d13bed  Standardised_Measurement_of_Operational_Wind_Turbine_Seismic_Noise.pdf  # Annex 4 - measurement standard
+51e8b7593a1b7e1838f50fd98c4b4429b395e8543cbc65a776d15fab81a0366d  Updated_approach_to_managing_onshore_wind_turbine_interference_with_Eskdalemuir_Seismic_Array__consultation_document.pdf  # DESNZ consultation document (2026)
+5a7077e53fae8b70fdce994999548354f9873f00dfc9e9924e123bd525caf09f  The_additional_power_produced_by_any_assemblage_of_windfarms_should_not_exceed_that_already_experienced_at_Eskdalemuir.pdf  # Styles et al. (2005), Keele report
