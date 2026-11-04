@@ -1,0 +1,12 @@
+{
+  "C_published": 0.25679747214682624,
+  "C_reproduced": 0.25050231536281237,
+  "C_rel_diff": -0.02451409171354524,
+  "per_turbine_median_abs_err": 0.03353583433132301,
+  "per_turbine_max_abs_err": 0.07908804397486935,
+  "avg_median_abs_err": 0.04064993255851268,
+  "avg_err_min": -0.08179825681703567,
+  "avg_err_max": 0.0675865384976504,
+  "avg_err_mean": -0.023925163517858828,
+  "open_choice_max_change": 0.0025857499668341943
+}

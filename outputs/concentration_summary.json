@@ -1,0 +1,9 @@
+{
+  "within_17km_budget": 0.6033624535662702,
+  "within_20km_budget": 0.7816957111695848,
+  "within_17km_capacity": 0.08275843954648499,
+  "within_20km_capacity": 0.1375379293246381,
+  "hopsrig_plus_little_hartfell_budget": 0.45065745087389086,
+  "free_share_published": 0.41587884689448695,
+  "headroom_over_budget_linear": 0.6448869047619048
+}

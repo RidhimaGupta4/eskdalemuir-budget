@@ -1,0 +1,5 @@
+,median_abs_error
+"as written (alpha over 0.5-8 Hz, K=20, trapezoid)",0.033535834331322956
+alpha searched over 0.01-20 Hz,0.033535834331322956
+K = 10 channels,0.03095008436448876
+rectangle rule,0.033535807350372315
